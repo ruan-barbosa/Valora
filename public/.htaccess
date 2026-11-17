@@ -1,0 +1,17 @@
+# public/.htaccess
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Base da aplicação (ajuste se estiver numa subpasta)
+    RewriteBase /
+
+    # Impede a listagem de diretórios
+    Options -Indexes
+
+    # Se o ficheiro ou diretório existir (ex: css, js, imagens), serve diretamente
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Caso contrário, redireciona tudo para o index.php
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>

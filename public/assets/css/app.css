@@ -1,0 +1,12 @@
+body {
+    background-color: #f8f9fa;
+}
+
+#wrapper {
+    overflow-x: hidden;
+}
+
+/* Cores de margem definidas pelo guia */
+.bg-margem-perigo { background-color: #dc3545 !important; color: white; } /* vermelho */
+.bg-margem-alerta { background-color: #ffc107 !important; color: black; } /* âmbar (critério em aberto) */
+.bg-margem-saudavel { background-color: #198754 !important; color: white; } /* verde */
