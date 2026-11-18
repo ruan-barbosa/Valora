@@ -1,9 +1,6 @@
 # public/.htaccess
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
-    # Base da aplicação (ajuste se estiver numa subpasta)
-    RewriteBase /
 
     # Impede a listagem de diretórios
     Options -Indexes
