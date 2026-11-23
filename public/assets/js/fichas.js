@@ -73,8 +73,9 @@ document.addEventListener('DOMContentLoaded', function() {
         timeoutCalculo = setTimeout(() => {
             const formData = new FormData(formFicha);
 
-            fetch('/fichas/calcular', {
+            fetch(window.valoraUrl('fichas/calcular'), {
                 method: 'POST',
+                headers: window.valoraCabecalhos(),
                 body: formData
             })
             .then(response => {

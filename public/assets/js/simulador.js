@@ -26,8 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(formSimulador);
 
         // Fetch para a rota definida na Seção 8.7
-        fetch('/simulador/simular', {
+        fetch(window.valoraUrl('simulador/simular'), {
             method: 'POST',
+            headers: window.valoraCabecalhos(),
             body: formData
         })
         .then(response => {

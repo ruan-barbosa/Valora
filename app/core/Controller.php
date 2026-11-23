@@ -32,7 +32,7 @@ class Controller
         $usuario = Auth::usuario();
 
         return [
-            'usuarioLogado'    => $usuario ? ['nome' => $usuario['nome'], 'perfil' => $usuario['perfil']] : null,
+            'usuarioLogado'    => $usuario ? ['id_usuario' => $usuario['id_usuario'], 'nome' => $usuario['nome'], 'perfil' => $usuario['perfil']] : null,
             'empresaNome'      => $usuario['empresa_nome'] ?? '',
             'alertasNaoVistos' => $this->contarAlertas(),
             'mensagem'         => Session::pegarFlash('mensagem'),

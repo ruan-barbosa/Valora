@@ -32,6 +32,9 @@ class Router
     public function despachar(string $metodo, string $caminho): void
     {
         $metodo = strtoupper($metodo);
+        if ($metodo === 'HEAD') {
+            $metodo = 'GET';
+        }
         $base = new Controller();
         $metodosDoCaminho = [];
 

@@ -17,6 +17,8 @@ class Database
                     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,  // erros viram exceções
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,        // resultados como array com nomes
                     PDO::ATTR_EMULATE_PREPARES   => false,                   // consultas preparadas de verdade
+                    // As datas gravadas pelo banco (current_timestamp) seguem o horário de Brasília.
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "set time_zone = '-03:00'",
                 ]);
             } catch (PDOException $e) {
                 // O erro original pode conter usuário e servidor: vai para o log, não para a tela.

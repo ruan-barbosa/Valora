@@ -41,13 +41,13 @@ $csrf =$csrf ?? 'token_de_teste';
     </div>
 
     <!-- Cards de Resumo (Comuns a perfis de gestão/admin) -->
-    <?php if (in_array(\$perfil, ['administrador', 'gestor'])): ?>
+    <?php if (in_array($perfil, ['administrador', 'gestor'])): ?>
     <div class="row g-4 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm bg-danger text-white h-100">
                 <div class="card-body">
                     <h6 class="text-uppercase fw-bold opacity-75 mb-1">Produtos Abaixo da Margem</h6>
-                    <h2 class="display-5 fw-bold mb-0"><?= (int)\$resumo['produtos_abaixo_margem'] ?></h2>
+                    <h2 class="display-5 fw-bold mb-0"><?= (int)$resumo['produtos_abaixo_margem'] ?></h2>
                 </div>
             </div>
         </div>
@@ -55,7 +55,7 @@ $csrf =$csrf ?? 'token_de_teste';
             <div class="card border-0 shadow-sm bg-warning text-dark h-100">
                 <div class="card-body">
                     <h6 class="text-uppercase fw-bold opacity-75 mb-1">Alertas Não Vistos</h6>
-                    <h2 class="display-5 fw-bold mb-0"><?= (int)\$resumo['alertas_nao_vistos'] ?></h2>
+                    <h2 class="display-5 fw-bold mb-0"><?= (int)$resumo['alertas_nao_vistos'] ?></h2>
                 </div>
             </div>
         </div>
@@ -63,7 +63,7 @@ $csrf =$csrf ?? 'token_de_teste';
             <div class="card border-0 shadow-sm bg-success text-white h-100">
                 <div class="card-body">
                     <h6 class="text-uppercase fw-bold opacity-75 mb-1">Produção do Mês (Unid.)</h6>
-                    <h2 class="display-5 fw-bold mb-0"><?= number_format(\$resumo['producao_mes'], 0, ',', '.') ?></h2>
+                    <h2 class="display-5 fw-bold mb-0"><?= number_format($resumo['producao_mes'], 0, ',', '.') ?></h2>
                 </div>
             </div>
         </div>
@@ -74,7 +74,7 @@ $csrf =$csrf ?? 'token_de_teste';
         <!-- ÁREA ESQUERDA: Alertas e Ações -->
         <div class="col-lg-5">
             
-            <?php if (in_array(\$perfil, ['administrador', 'producao'])): ?>
+            <?php if (in_array($perfil, ['administrador', 'producao'])): ?>
             <!-- Atalho Produção (Seção 8.3) -->
             <div class="card border-0 shadow-sm mb-4 bg-primary text-white">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -87,7 +87,7 @@ $csrf =$csrf ?? 'token_de_teste';
             </div>
             <?php endif; ?>
 
-            <?php if (in_array(\$perfil, ['administrador', 'comprador'])): ?>
+            <?php if (in_array($perfil, ['administrador', 'comprador'])): ?>
             <!-- Atalho Comprador (Seção 8.3) -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -100,16 +100,16 @@ $csrf =$csrf ?? 'token_de_teste';
             </div>
             <?php endif; ?>
 
-            <?php if (in_array(\$perfil, ['administrador', 'gestor'])): ?>
+            <?php if (in_array($perfil, ['administrador', 'gestor'])): ?>
             <!-- Alertas (Seção 8.3) -->
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white border-bottom pt-3 pb-2 d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold text-dark mb-0">Últimos Alertas</h5>
-                    <span class="badge bg-warning text-dark"><?= (int)\$resumo['alertas_nao_vistos'] ?> novos</span>
+                    <span class="badge bg-warning text-dark"><?= (int)$resumo['alertas_nao_vistos'] ?> novos</span>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
-                        <?php if (empty(\$alertas)): ?>
+                        <?php if (empty($alertas)): ?>
                             <li class="list-group-item p-4 text-center text-muted">Nenhum alerta recente.</li>
                         <?php else: ?>
                             <?php foreach ($alertas as$alerta): ?>
@@ -117,24 +117,24 @@ $csrf =$csrf ?? 'token_de_teste';
                                     // A cor indica se a margem caiu abaixo do mínimo (Seção 8.3)
                                     $corTexto =$alerta['margem_calculada'] < 30 ? 'text-danger' : 'text-warning'; 
                                 ?>
-                                <li class="list-group-item p-3 <?= \$alerta['visto'] ? 'bg-light' : '' ?>">
+                                <li class="list-group-item p-3 <?= $alerta['visto'] ? 'bg-light' : '' ?>">
                                     <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <strong class="<?= \$alerta['visto'] ? 'text-muted' : 'text-dark' ?>">
-                                            <?= htmlspecialchars(\$alerta['produto']) ?>
+                                        <strong class="<?= $alerta['visto'] ? 'text-muted' : 'text-dark' ?>">
+                                            <?= htmlspecialchars($alerta['produto']) ?>
                                         </strong>
-                                        <small class="text-muted"><?= date('d/m/Y', strtotime(\$alerta['data_alerta'])) ?></small>
+                                        <small class="text-muted"><?= date('d/m/Y', strtotime($alerta['data_alerta'])) ?></small>
                                     </div>
                                     <p class="mb-2 small text-muted">
-                                        Novo custo calculado: <strong class="<?= \$corTexto ?>">R$<?= number_format($alerta['custo_calculado'], 2, ',', '.') ?></strong><br>
+                                        Novo custo calculado: <strong class="<?= $corTexto ?>">R$<?= number_format($alerta['custo_calculado'], 2, ',', '.') ?></strong><br>
                                         Margem resultante: <strong class="<?= $corTexto ?>"><?= number_format($alerta['margem_calculada'], 1, ',', '.') ?>%</strong>
-                                        <?php if (!empty(\$alerta['insumo'])): ?>
-                                            <br><em>Impactado por: <?= htmlspecialchars(\$alerta['insumo']) ?></em>
+                                        <?php if (!empty($alerta['insumo'])): ?>
+                                            <br><em>Impactado por: <?= htmlspecialchars($alerta['insumo']) ?></em>
                                         <?php endif; ?>
                                     </p>
-                                    <?php if (!\$alerta['visto']): ?>
+                                    <?php if (!$alerta['visto']): ?>
                                     <form method="post" action="<?= htmlspecialchars(url('alertas/visto')) ?>" class="d-flex justify-content-end">
-                                        <input type="hidden" name="csrf" value="<?= htmlspecialchars(\$csrf) ?>">
-                                        <input type="hidden" name="id_alerta" value="<?= (int)\$alerta['id_alerta'] ?>">
+                                        <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>">
+                                        <input type="hidden" name="id_alerta" value="<?= (int)$alerta['id_alerta'] ?>">
                                         <button type="submit" class="btn btn-sm btn-outline-success">✔ Marcar como visto</button>
                                     </form>
                                     <?php endif; ?>
@@ -148,7 +148,7 @@ $csrf =$csrf ?? 'token_de_teste';
         </div>
 
         <!-- ÁREA DIREITA: Gráficos -->
-        <?php if (in_array(\$perfil, ['administrador', 'gestor'])): ?>
+        <?php if (in_array($perfil, ['administrador', 'gestor'])): ?>
         <div class="col-lg-7">
             <!-- Gráfico 1: Margem por Produto -->
             <div class="card border-0 shadow-sm mb-4">
@@ -180,7 +180,7 @@ $csrf =$csrf ?? 'token_de_teste';
 </div>
 
 <!-- Script exclusivo do Dashboard (Seção 7 e 11) -->
-<?php if (in_array(\$perfil, ['administrador', 'gestor'])): ?>
+<?php if (in_array($perfil, ['administrador', 'gestor'])): ?>
     <script src="<?= htmlspecialchars(asset('js/dashboard.js')) ?>"></script>
 <?php endif; ?>
 

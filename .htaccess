@@ -1,0 +1,5 @@
+# Raiz do projeto: manda todo acesso para a pasta public/.
+# Assim o endereço funciona sem o /public/ e app/, config/ e database/ ficam inacessíveis pelo navegador.
+Options -Indexes
+RewriteEngine On
+RewriteRule ^(?!public/)(.*)$ public/$1 [L]

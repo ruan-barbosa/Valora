@@ -2,7 +2,10 @@
 
 // Funções usadas nas views e nos controllers.
 
-/** Parte do endereço que vem antes das rotas: "" no domínio raiz ou "/public" quando acessado por /public/. */
+/**
+ * Parte do endereço que vem antes das rotas.
+ * Exemplos: "" (domínio na raiz), "/public" (acessado por /public/), "/Valora" (projeto em htdocs/Valora).
+ */
 function base_url(): string
 {
     static $base = null;
@@ -10,13 +13,23 @@ function base_url(): string
         return $base;
     }
 
-    $pastaDoScript = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
     $caminho = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
-    $acessadoPelaPasta = $pastaDoScript !== ''
-        && ($caminho === $pastaDoScript || str_starts_with($caminho, $pastaDoScript . '/'));
+    // Onde a pasta public/ está em relação à raiz do servidor: "", "/public" ou "/Valora/public".
+    $raizServidor = realpath($_SERVER['DOCUMENT_ROOT'] ?? '') ?: '';
+    $pastaPublic = realpath(__DIR__ . '/../../public') ?: '';
+    $publicWeb = ($raizServidor !== '' && str_starts_with($pastaPublic, $raizServidor))
+        ? str_replace('\\', '/', substr($pastaPublic, strlen($raizServidor)))
+        : '';
 
-    $base = $acessadoPelaPasta ? $pastaDoScript : '';
+    if ($publicWeb === '') {
+        $base = '';                                         // o servidor já aponta para a pasta public/
+    } elseif ($caminho === $publicWeb || str_starts_with($caminho, $publicWeb . '/')) {
+        $base = $publicWeb;                                 // acessado por .../public/...
+    } else {
+        $base = rtrim(str_replace('\\', '/', dirname($publicWeb)), '/');   // acessado pela raiz do projeto
+    }
+
     return $base;
 }
 

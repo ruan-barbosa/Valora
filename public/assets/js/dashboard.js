@@ -22,9 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const idItem = selectInsumo.value;
 
         // Monta a querystring para GET /dashboard/graficos
-        const url = `/dashboard/graficos?periodo_inicio=${dataInicio}&periodo_fim=${dataFim}&id_item=${idItem}`;
+        const url = window.valoraUrl('dashboard/graficos') + `?periodo_inicio=${dataInicio}&periodo_fim=${dataFim}&id_item=${idItem}`;
 
-        fetch(url)
+        fetch(url, { headers: window.valoraCabecalhos() })
             .then(response => {
                 if (!response.ok) throw new Error('Erro ao carregar dados dos gráficos.');
                 return response.json();
