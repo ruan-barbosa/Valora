@@ -1,4 +1,5 @@
 config/config.php
+storage/
 testes/node_modules/
 testes/cypress/videos/
 testes/cypress/screenshots/
