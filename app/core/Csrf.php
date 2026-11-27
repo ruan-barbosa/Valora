@@ -5,11 +5,20 @@ class Csrf
 {
     public static function token(): string
     {
-        if (!Session::get('csrf')) {
-            Session::set('csrf', bin2hex(random_bytes(32)));
+        $token = Session::get('csrf');
+        if (!is_string($token) || $token === '') {
+            return self::renovar();
         }
 
-        return Session::get('csrf');
+        return $token;
+    }
+
+    /** Gera um token novo após eventos sensíveis, como login e troca de senha. */
+    public static function renovar(): string
+    {
+        $token = bin2hex(random_bytes(32));
+        Session::set('csrf', $token);
+        return $token;
     }
 
     /** Aceita o campo "csrf" do formulário ou o cabeçalho X-CSRF-Token (usado nos fetch). */

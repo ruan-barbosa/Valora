@@ -44,10 +44,22 @@ class ConfiguracaoController extends Controller
             ]);
         }
 
-        Empresa::atualizar(Auth::empresaId(), $nome, $segmento, $margem, $indiretos);
-        $this->atualizarSessao(['empresa_nome' => $nome]);
+        $pdo = Database::conectar();
+        try {
+            $pdo->beginTransaction();
+            Empresa::atualizar(Auth::empresaId(), $nome, $segmento, $margem, $indiretos);
+            // Mudanças na margem padrão ou nos custos indiretos afetam todas as fichas existentes.
+            AlertaService::recalcularEmpresa(Auth::empresaId());
+            $pdo->commit();
+        } catch (Throwable $erro) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $erro;
+        }
 
-        $this->redirecionar('configuracoes', 'Dados da empresa atualizados.');
+        $this->atualizarSessao(['empresa_nome' => $nome]);
+        $this->redirecionar('configuracoes', 'Dados da empresa atualizados. Custos e margens foram recalculados.');
     }
 
     /** Cria o usuário (sem id_usuario) ou edita um existente (com id_usuario). */
@@ -138,6 +150,18 @@ class ConfiguracaoController extends Controller
 
         Usuario::definirAtivo($id, $idEmpresa, false);
         $this->redirecionar('configuracoes', 'Usuário inativado.');
+    }
+
+    public function reativarUsuario(): void
+    {
+        $idEmpresa = Auth::empresaId();
+        $id = (int) Validador::texto('id_usuario');
+        $usuario = Usuario::buscarPorId($id, $idEmpresa);
+        if (!$usuario) {
+            $this->redirecionar('configuracoes', 'Usuário não encontrado.', 'erro');
+        }
+        Usuario::definirAtivo($id, $idEmpresa, true);
+        $this->redirecionar('configuracoes', 'Usuário reativado.');
     }
 
     /** Mantém o que está na sessão igual ao banco depois de uma alteração. */

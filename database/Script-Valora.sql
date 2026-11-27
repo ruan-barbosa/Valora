@@ -80,6 +80,7 @@ create table composicao (
   quantidade decimal(12,6) not null,
   percentual_perda decimal(5,2) not null default 0,
   unique (id_produto, id_item),
+  index idx_composicao_item (id_item),
   foreign key (id_produto) references produto (id_produto),
   foreign key (id_item) references item (id_item),
   foreign key (id_unidade) references unidade_medida (id_unidade)
@@ -91,9 +92,10 @@ create table lancamento_producao (
   id_usuario int not null,
   quantidade decimal(12,3) not null,
   data_lancamento datetime not null default current_timestamp,
-  custo_unitario decimal(12,4) not null,
-  custo_total decimal(14,2) not null,
+  custo_unitario decimal(20,4) not null,
+  custo_total decimal(20,2) not null,
   preco_venda decimal(12,2) not null,
+  index idx_lancamento_data (data_lancamento),
   foreign key (id_produto) references produto (id_produto),
   foreign key (id_usuario) references usuario (id_usuario)
 ) default charset=utf8mb4 collate=utf8mb4_unicode_ci;
@@ -103,12 +105,25 @@ create table alerta (
   id_produto int not null,
   id_item int,
   margem_calculada decimal(7,2),
-  custo_calculado decimal(12,4),
+  custo_calculado decimal(20,4),
   data_alerta datetime not null default current_timestamp,
   visto boolean not null default false,
+  resolvido boolean not null default false,
   index idx_alerta_produto_visto (id_produto, visto),
+  index idx_alerta_resolvido (resolvido, visto),
   foreign key (id_produto) references produto (id_produto),
   foreign key (id_item) references item (id_item)
+) default charset=utf8mb4 collate=utf8mb4_unicode_ci;
+
+create table historico_margem (
+  id_historico_margem int primary key auto_increment,
+  id_produto int not null,
+  custo_total decimal(20,4) not null,
+  margem_calculada decimal(7,2) not null,
+  margem_minima decimal(5,2) not null,
+  data_registro datetime not null default current_timestamp,
+  index idx_historico_margem_produto_data (id_produto, data_registro),
+  foreign key (id_produto) references produto (id_produto)
 ) default charset=utf8mb4 collate=utf8mb4_unicode_ci;
 
 insert into unidade_medida (sigla, grupo, fator_conversao) values

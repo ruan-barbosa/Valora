@@ -50,6 +50,7 @@ class AuthController extends Controller
         }
 
         LimiteTentativas::limpar($chaveUsuario);
+        LimiteTentativas::limpar($chaveIp);
 
         // Se o algoritmo de hash do PHP evoluiu, atualiza o hash guardado.
         if (password_needs_rehash($usuario['senha_hash'], PASSWORD_DEFAULT)) {

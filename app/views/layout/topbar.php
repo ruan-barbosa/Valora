@@ -1,9 +1,10 @@
 <?php 
-$empresaNome = $empresaNome ?? 'Empresa Exemplo Ltda';
-$alertasNaoVistos = $alertasNaoVistos ?? 3;
+$empresaNome = $empresaNome ?? '';
+$alertasNaoVistos = $alertasNaoVistos ?? 0;
 ?>
 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom w-100 px-3">
     <div class="container-fluid">
+        <button class="btn btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar-wrapper" aria-controls="sidebar-wrapper" aria-label="Abrir menu">☰</button>
         <span class="navbar-brand mb-0 h1"><?= htmlspecialchars($empresaNome) ?></span>
         
         <div class="ms-auto d-flex align-items-center">
@@ -25,9 +26,14 @@ $alertasNaoVistos = $alertasNaoVistos ?? 3;
                     <?= htmlspecialchars($usuarioLogado['nome']) ?> (<?= htmlspecialchars($usuarioLogado['perfil']) ?>)
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                    <li><a class="dropdown-item" href="#">Trocar Senha</a></li>
+                    <li><a class="dropdown-item" href="<?= htmlspecialchars(url('conta/senha')) ?>">Trocar Senha</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="<?= htmlspecialchars(url('sair')) ?>">Sair</a></li>
+                    <li>
+                        <form method="post" action="<?= htmlspecialchars(url('sair')) ?>">
+                            <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf ?? '') ?>">
+                            <button class="dropdown-item text-danger" type="submit">Sair</button>
+                        </form>
+                    </li>
                 </ul>
             </div>
         </div>

@@ -1,91 +1,154 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Instâncias do Chart.js
+document.addEventListener('DOMContentLoaded', function () {
     let chartMargem = null;
     let chartEvolucao = null;
 
-    // Elementos do DOM
     const btnAtualizar = document.getElementById('btn-atualizar-graficos');
     const inputInicio = document.getElementById('filtro_inicio');
     const inputFim = document.getElementById('filtro_fim');
     const selectInsumo = document.getElementById('filtro_insumo');
-
-    // Inicializa gráficos vazios
+    const listaAlertas = document.getElementById('lista-alertas');
+    const contadorProdutos = document.getElementById('contador-produtos-abaixo-margem');
+    const contadorAlertas = document.getElementById('contador-alertas-nao-vistos');
+    const badgeAlertas = document.getElementById('badge-alertas-nao-vistos');
     const ctxMargem = document.getElementById('graficoMargem');
     const ctxEvolucao = document.getElementById('graficoEvolucao');
+    const statusMargem = document.getElementById('statusGraficoMargem');
+    const statusEvolucao = document.getElementById('statusGraficoEvolucao');
 
-    if (!ctxMargem || !ctxEvolucao) return; // Segurança caso o perfil não tenha gráficos
+    function elemento(tag, classe, texto) {
+        const node = document.createElement(tag);
+        if (classe) node.className = classe;
+        if (texto !== undefined && texto !== null) node.textContent = String(texto);
+        return node;
+    }
 
-    // Função para pedir dados ao servidor (Seção 7)
-    function carregarGraficos() {
-        const dataInicio = inputInicio.value;
-        const dataFim = inputFim.value;
-        const idItem = selectInsumo.value;
+    function dataBrasileira(valor) {
+        const partes = String(valor || '').slice(0, 10).split('-');
+        return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : '';
+    }
 
-        // Monta a querystring para GET /dashboard/graficos
-        const url = window.valoraUrl('dashboard/graficos') + `?periodo_inicio=${dataInicio}&periodo_fim=${dataFim}&id_item=${idItem}`;
+    function renderizarAlertas(dados) {
+        if (contadorProdutos) contadorProdutos.textContent = dados.produtos_abaixo_margem ?? 0;
+        if (contadorAlertas) contadorAlertas.textContent = dados.alertas_nao_vistos ?? 0;
+        if (badgeAlertas) badgeAlertas.textContent = `${dados.alertas_nao_vistos ?? 0} novos`;
+        if (!listaAlertas) return;
 
-        fetch(url, { headers: window.valoraCabecalhos() })
+        listaAlertas.replaceChildren();
+        if (!Array.isArray(dados.alertas) || dados.alertas.length === 0) {
+            listaAlertas.appendChild(elemento('li', 'list-group-item p-4 text-center text-muted', 'Nenhum alerta recente.'));
+            return;
+        }
+
+        dados.alertas.forEach(alerta => {
+            const visto = Boolean(alerta.visto);
+            const cor = Number(alerta.margem_calculada) < Number(alerta.margem_minima) ? 'text-danger' : 'text-warning';
+            const item = elemento('li', `list-group-item p-3${visto ? ' bg-light' : ''}`);
+            const cabecalho = elemento('div', 'd-flex justify-content-between align-items-start mb-1');
+            cabecalho.appendChild(elemento('strong', visto ? 'text-muted' : 'text-dark', alerta.produto));
+            cabecalho.appendChild(elemento('small', 'text-muted', dataBrasileira(alerta.data_alerta)));
+            item.appendChild(cabecalho);
+
+            const descricao = elemento('p', 'mb-2 small text-muted');
+            descricao.appendChild(document.createTextNode('Novo custo calculado: '));
+            descricao.appendChild(elemento('strong', cor, Number(alerta.custo_calculado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })));
+            descricao.appendChild(document.createElement('br'));
+            descricao.appendChild(document.createTextNode('Margem resultante: '));
+            descricao.appendChild(elemento('strong', cor, `${Number(alerta.margem_calculada).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`));
+            if (alerta.insumo) {
+                descricao.appendChild(document.createElement('br'));
+                descricao.appendChild(elemento('em', '', `Impactado por: ${alerta.insumo}`));
+            }
+            item.appendChild(descricao);
+
+            if (!visto) {
+                const formulario = elemento('form', 'd-flex justify-content-end');
+                formulario.method = 'post';
+                formulario.action = window.valoraUrl('alertas/visto');
+                const csrf = elemento('input');
+                csrf.type = 'hidden'; csrf.name = 'csrf';
+                csrf.value = listaAlertas.dataset.csrf || window.valoraCsrf();
+                const id = elemento('input');
+                id.type = 'hidden'; id.name = 'id_alerta'; id.value = alerta.id_alerta;
+                const botao = elemento('button', 'btn btn-sm btn-outline-success', '✔ Marcar como visto');
+                botao.type = 'submit';
+                formulario.append(csrf, id, botao);
+                item.appendChild(formulario);
+            }
+
+            listaAlertas.appendChild(item);
+        });
+    }
+
+    function carregarAlertas() {
+        if (!listaAlertas) return;
+        fetch(window.valoraUrl('dashboard/alertas'), {
+            headers: window.valoraCabecalhos(),
+            cache: 'no-store'
+        })
             .then(response => {
-                if (!response.ok) throw new Error('Erro ao carregar dados dos gráficos.');
+                if (!response.ok) throw new Error('Não foi possível atualizar os alertas.');
                 return response.json();
             })
-            .then(dados => {
-                renderizarGraficoMargem(dados.margem_produtos);
-                renderizarGraficoEvolucao(dados.evolucao_insumo);
-            })
-            .catch(error => {
-                console.error(error);
-                // MOCK PARA FASE DE DESENVOLVIMENTO (Seção 12)
-                // Se a rota não existir, injeta dados fictícios para exibir o layout
-                const mockMargem = [
-                    { nome: 'Bolo de Cenoura', margem: 21.6, margem_minima: 30 },
-                    { nome: 'Pão Francês', margem: 42.5, margem_minima: 30 },
-                    { nome: 'Refri Cola 2L', margem: 29.1, margem_minima: 30 }
-                ];
-                const mockEvolucao = {
-                    datas: ['10/11', '12/11', '15/11', '17/11'],
-                    precos: [5.00, 5.20, 5.40, 5.40]
-                };
-                renderizarGraficoMargem(mockMargem);
-                renderizarGraficoEvolucao(mockEvolucao);
-            });
+            .then(renderizarAlertas)
+            .catch(error => console.error(error));
+    }
+
+    if (listaAlertas) {
+        carregarAlertas();
+        window.setInterval(carregarAlertas, 3000);
+    }
+
+    function definirStatus(elementoStatus, canvas, mensagem, erro) {
+        if (elementoStatus) {
+            elementoStatus.textContent = mensagem || '';
+            elementoStatus.className = erro
+                ? 'small text-danger text-center mt-2 mb-0'
+                : 'small text-muted text-center mt-2 mb-0';
+        }
+        if (canvas) canvas.style.display = mensagem ? 'none' : '';
     }
 
     function renderizarGraficoMargem(dados) {
-        if (chartMargem) chartMargem.destroy();
-
-        const labels = dados.map(d => d.nome);
-        const margens = dados.map(d => d.margem);
-        
-        // Cores baseadas na margem mínima (Seção 6)
-        const cores = dados.map(d => d.margem >= d.margem_minima ? '#198754' : '#dc3545');
+        if (chartMargem) {
+            chartMargem.destroy();
+            chartMargem = null;
+        }
+        if (!Array.isArray(dados) || dados.length === 0) {
+            definirStatus(statusMargem, ctxMargem, 'Ainda não existem produtos com fichas técnicas para exibir.');
+            return;
+        }
+        definirStatus(statusMargem, ctxMargem, '');
 
         chartMargem = new Chart(ctxMargem, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: dados.map(item => item.nome),
                 datasets: [{
-                    label: 'Margem de Lucro (%)',
-                    data: margens,
-                    backgroundColor: cores,
+                    label: 'Margem de lucro (%)',
+                    data: dados.map(item => Number(item.margem)),
+                    backgroundColor: dados.map(item => Number(item.margem) >= Number(item.margem_minima) ? '#198754' : '#dc3545'),
                     borderRadius: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
+                scales: { y: { beginAtZero: true } },
+                plugins: { legend: { display: false } }
             }
         });
     }
 
     function renderizarGraficoEvolucao(dados) {
-        if (chartEvolucao) chartEvolucao.destroy();
+        if (chartEvolucao) {
+            chartEvolucao.destroy();
+            chartEvolucao = null;
+        }
+        if (!dados || !Array.isArray(dados.datas) || dados.datas.length === 0) {
+            definirStatus(statusEvolucao, ctxEvolucao, 'Não há alterações de preço deste insumo no período selecionado.');
+            return;
+        }
+        definirStatus(statusEvolucao, ctxEvolucao, '');
 
         chartEvolucao = new Chart(ctxEvolucao, {
             type: 'line',
@@ -93,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 labels: dados.datas,
                 datasets: [{
                     label: 'Preço (R$)',
-                    data: dados.precos,
+                    data: dados.precos.map(Number),
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
                     borderWidth: 2,
@@ -104,17 +167,50 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: false }
-                }
+                scales: { y: { beginAtZero: false } }
             }
         });
     }
 
-    // Event Listeners
-    btnAtualizar.addEventListener('click', carregarGraficos);
-    selectInsumo.addEventListener('change', carregarGraficos);
+    function carregarGraficos() {
+        if (!ctxMargem || !ctxEvolucao) return;
 
-    // Carrega na primeira abertura
+        const dataInicio = inputInicio ? inputInicio.value : '';
+        const dataFim = inputFim ? inputFim.value : '';
+        if (dataInicio && dataFim && dataInicio > dataFim) {
+            definirStatus(statusMargem, ctxMargem, '');
+            definirStatus(statusEvolucao, ctxEvolucao, 'A data inicial deve ser anterior ou igual à data final.', true);
+            return;
+        }
+
+        const parametros = new URLSearchParams({
+            periodo_inicio: dataInicio,
+            periodo_fim: dataFim,
+            id_item: selectInsumo ? selectInsumo.value : ''
+        });
+        const url = `${window.valoraUrl('dashboard/graficos')}?${parametros.toString()}`;
+
+        if (btnAtualizar) btnAtualizar.disabled = true;
+        fetch(url, { headers: window.valoraCabecalhos(), cache: 'no-store' })
+            .then(response => {
+                if (!response.ok) throw new Error('Não foi possível carregar os gráficos.');
+                return response.json();
+            })
+            .then(dados => {
+                renderizarGraficoMargem(dados.margem_produtos);
+                renderizarGraficoEvolucao(dados.evolucao_insumo);
+            })
+            .catch(error => {
+                definirStatus(statusMargem, ctxMargem, error.message || 'Erro ao carregar o gráfico de margens.', true);
+                definirStatus(statusEvolucao, ctxEvolucao, error.message || 'Erro ao carregar o histórico de preços.', true);
+                console.error(error);
+            })
+            .finally(() => {
+                if (btnAtualizar) btnAtualizar.disabled = false;
+            });
+    }
+
+    if (btnAtualizar) btnAtualizar.addEventListener('click', carregarGraficos);
+    if (selectInsumo) selectInsumo.addEventListener('change', carregarGraficos);
     carregarGraficos();
 });

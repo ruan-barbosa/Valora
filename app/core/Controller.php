@@ -31,9 +31,20 @@ class Controller
     {
         $usuario = Auth::usuario();
 
+        $empresa = $usuario ? Empresa::buscar((int) $usuario['id_empresa']) : null;
+        $segmento = (string) ($empresa['segmento'] ?? 'industria');
+        $termoPrincipal = $segmento === 'servicos' ? 'Serviço' : 'Produto';
+
         return [
             'usuarioLogado'    => $usuario ? ['id_usuario' => $usuario['id_usuario'], 'nome' => $usuario['nome'], 'perfil' => $usuario['perfil']] : null,
             'empresaNome'      => $usuario['empresa_nome'] ?? '',
+            'empresaConfig'    => $empresa,
+            'segmentoEmpresa'  => $segmento,
+            'termoPrincipal'   => $termoPrincipal,
+            'termoPrincipalPlural' => $segmento === 'servicos' ? 'Serviços' : 'Produtos',
+            'termoExecucao'    => $segmento === 'servicos' ? 'Execução' : 'Produção',
+            'termoExecucaoPlural' => $segmento === 'servicos' ? 'Execuções' : 'Produções',
+            'unidadeExecucao'  => $segmento === 'servicos' ? 'horas' : 'unidades',
             'alertasNaoVistos' => $this->contarAlertas(),
             'mensagem'         => Session::pegarFlash('mensagem'),
             'erros'            => Session::pegarFlash('erros', []),
@@ -45,7 +56,7 @@ class Controller
     /** Fica 0 até existir o model Alerta (fase E). */
     private function contarAlertas(): int
     {
-        if (!Auth::logado() || !class_exists('Alerta') || !method_exists('Alerta', 'contarNaoVistos')) {
+        if (!Auth::logado() || !Auth::permite(['gestor']) || !class_exists('Alerta') || !method_exists('Alerta', 'contarNaoVistos')) {
             return 0;
         }
 

@@ -1,4 +1,4 @@
-<?php $csrf = $csrf ?? 'token_de_teste'; ?>
+<?php $csrf = $csrf ?? ''; ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>

@@ -47,6 +47,7 @@ class ContaController extends Controller
         Usuario::atualizarHash(Auth::id(), Auth::hash($nova));
         LimiteTentativas::limpar($chave);
         Session::regenerar();
+        Csrf::renovar();
 
         $this->redirecionar('conta/senha', 'Senha alterada com sucesso.');
     }

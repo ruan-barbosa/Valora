@@ -1,13 +1,10 @@
 <?php 
 include __DIR__ . '/../layout/header.php'; 
 
-// Mock de dados (Seção 12)
-$insumos = $insumos ?? [
-    ['id_item' => 1, 'nome' => 'Farinha de Trigo', 'tipo' => 'material', 'id_unidade' => 1, 'sigla' => 'kg', 'preco_atual' => 5.40, 'ultimo_fornecedor' => 'Moinho Sul', 'ativo' => true],
-    ['id_item' => 2, 'nome' => 'Cozinheiro', 'tipo' => 'mao_de_obra', 'id_unidade' => 5, 'sigla' => 'h', 'preco_atual' => 18.50, 'ultimo_fornecedor' => null, 'ativo' => true],
-];
-$fornecedores = $fornecedores ?? [['id_fornecedor' => 1, 'nome' => 'Moinho Sul']];
-$csrf = $csrf ?? 'token_de_teste';
+$insumos = $insumos ?? [];
+$fornecedores = $fornecedores ?? [];
+$incluirInativos = $incluirInativos ?? false;
+$csrf = $csrf ?? '';
 ?>
 
 <div class="container-fluid py-4">
@@ -31,6 +28,7 @@ $csrf = $csrf ?? 'token_de_teste';
         </li>
     </ul>
 
+    <div class="d-flex justify-content-end mb-2"><form method="get" action="<?= htmlspecialchars(url('insumos')) ?>" class="form-check"><input class="form-check-input" type="checkbox" name="inativos" value="1" id="mostrar-inativos-insumos" <?= $incluirInativos ? 'checked' : '' ?> onchange="this.form.submit()"><label class="form-check-label small text-muted" for="mostrar-inativos-insumos">Mostrar insumos inativos</label></form></div>
     <div class="card border-0 shadow-sm overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -40,14 +38,14 @@ $csrf = $csrf ?? 'token_de_teste';
                         <th>Tipo</th>
                         <th>Preço Atual</th>
                         <th>Unidade</th>
-                        <th>Último Fornecedor</th>
+                        <th>Último Fornecedor</th><th>Situação</th>
                         <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($insumos)): ?>
                         <tr>
-                            <td colspan="6" class="text-center p-5 text-muted">
+                            <td colspan="7" class="text-center p-5 text-muted">
                                 <p class="fs-4 mb-2">🌾</p>
                                 <p class="mb-3">Nenhum insumo cadastrado.</p>
                             </td>
@@ -64,6 +62,7 @@ $csrf = $csrf ?? 'token_de_teste';
                             <td class="text-primary fw-bold">R$ <?= number_format($i['preco_atual'], 2, ',', '.') ?></td>
                             <td class="text-muted"><?= htmlspecialchars($i['sigla']) ?></td>
                             <td class="text-muted"><?= htmlspecialchars($i['ultimo_fornecedor'] ?? '-') ?></td>
+                            <td><?= !empty($i['ativo']) ? '<span class="badge text-bg-success">Ativo</span>' : '<span class="badge text-bg-secondary">Inativo</span>' ?></td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
                                     <!-- Atualizar Preço (Abre Modal) -->
@@ -77,15 +76,27 @@ $csrf = $csrf ?? 'token_de_teste';
                                     </button>
                                     
                                     <!-- Ver Histórico -->
-                                    <button type="button" class="btn btn-sm btn-outline-info" title="Histórico">📊</button>
+                                    <button type="button" class="btn btn-sm btn-outline-info js-abrir-historico"
+                                            data-bs-toggle="modal" data-bs-target="#modalHistoricoPrecos"
+                                            data-id="<?= (int) $i['id_item'] ?>"
+                                            data-nome="<?= htmlspecialchars($i['nome'], ENT_QUOTES, 'UTF-8') ?>"
+                                            title="Consultar histórico de preços" aria-label="Consultar histórico de preços de <?= htmlspecialchars($i['nome'], ENT_QUOTES, 'UTF-8') ?>">
+                                        📊
+                                    </button>
                                     
                                     <a href="<?= htmlspecialchars(url('insumos/editar/' . $i['id_item'])) ?>" class="btn btn-sm btn-outline-primary" title="Editar">✏️</a>
                                     
-                                    <form method="post" action="<?= htmlspecialchars(url('insumos/inativar')) ?>" class="d-inline" onsubmit="return confirm('Inativar este insumo?');">
-                                        <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>">
-                                        <input type="hidden" name="id_item" value="<?= (int)$i['id_item'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Inativar">🗑️</button>
-                                    </form>
+                                    <?php if (!empty($i['ativo'])): ?>
+                                        <form method="post" action="<?= htmlspecialchars(url('insumos/inativar')) ?>" class="d-inline" onsubmit="return confirm('Inativar este insumo?');">
+                                            <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>"><input type="hidden" name="id_item" value="<?= (int)$i['id_item'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Inativar">Inativar</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form method="post" action="<?= htmlspecialchars(url('insumos/reativar')) ?>" class="d-inline">
+                                            <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>"><input type="hidden" name="id_item" value="<?= (int)$i['id_item'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Reativar</button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -135,26 +146,45 @@ $csrf = $csrf ?? 'token_de_teste';
     </div>
 </div>
 
-<script>
-// Script simples para popular o modal ao clicar no botão $
-document.addEventListener('DOMContentLoaded', function () {
-    var modalPreco = document.getElementById('modalPreco');
-    if(modalPreco) {
-        modalPreco.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            document.getElementById('modalPrecoId').value = button.getAttribute('data-id');
-            document.getElementById('modalPrecoNome').textContent = button.getAttribute('data-nome');
-            
-            // Lógica visual: se for mão de obra/máquina, o fornecedor não é estritamente obrigatório (Seção 8.5)
-            var selectFornecedor = document.getElementById('id_fornecedor');
-            if(button.getAttribute('data-tipo') === 'material') {
-                selectFornecedor.setAttribute('required', 'required');
-            } else {
-                selectFornecedor.removeAttribute('required');
-            }
-        });
-    }
-});
-</script>
+
+
+
+<!-- Modal de consulta do histórico de preços -->
+<div class="modal fade" id="modalHistoricoPrecos" tabindex="-1" aria-labelledby="tituloHistoricoPrecos" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title fw-bold" id="tituloHistoricoPrecos">Histórico de preços</h5>
+                    <p class="text-muted small mb-0" id="nomeHistoricoPrecos"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="statusHistoricoPrecos" class="alert alert-info py-2" role="status" aria-live="polite">Carregando histórico...</div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data da alteração</th>
+                                <th class="text-end">Preço</th>
+                                <th>Fornecedor</th>
+                                <th>Registrado por</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaHistoricoPrecos">
+                            <tr><td colspan="4" class="text-center text-muted py-4">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="<?= htmlspecialchars(asset('js/insumos.js')) ?>"></script>
 
 <?php include __DIR__ . '/../layout/footer.php'; ?>

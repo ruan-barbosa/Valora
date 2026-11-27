@@ -7,11 +7,14 @@
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "open": "cypress open"
+    "open": "cypress open",
+    "test": "cypress run",
+    "test:smoke": "cypress run --spec \"cypress/e2e/valora.cy.js\"",
+    "performance": "node performance/check-p95.mjs",
+    "test:php": "php php/teste_regras_negocio.php"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "Testes automatizados e verificação básica de desempenho do Valora"
 }

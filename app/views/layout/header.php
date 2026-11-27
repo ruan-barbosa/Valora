@@ -13,3 +13,11 @@
 </head>
 <body>
     <div class="d-flex" id="wrapper">
+<?php if (!empty($usuarioLogado)): ?>
+        <?php include __DIR__ . '/sidebar.php'; ?>
+        <div class="flex-grow-1" id="page-content-wrapper" style="min-width: 0;">
+            <?php include __DIR__ . '/topbar.php'; ?>
+            <div class="px-4"><?php include __DIR__ . '/mensagens.php'; ?></div>
+<?php else: ?>
+        <div class="flex-grow-1" id="page-content-wrapper" style="min-width: 0;">
+<?php endif; ?>

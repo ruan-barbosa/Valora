@@ -1,3 +1,4 @@
+</div> <!-- fecha o #page-content-wrapper -->
 </div> <!-- fecha o #wrapper aberto no header -->
     
     <!-- Bootstrap JS Bundle -->

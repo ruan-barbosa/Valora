@@ -9,6 +9,10 @@ class Session
             return;
         }
 
+        // Evita aceitar IDs de sessão fornecidos pelo cliente que não foram criados pelo PHP.
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+
         $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
             || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
 
@@ -63,7 +67,14 @@ class Session
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {
             $p = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+            setcookie(session_name(), '', [
+                'expires'  => time() - 42000,
+                'path'     => $p['path'] ?: '/',
+                'domain'   => $p['domain'],
+                'secure'   => (bool) $p['secure'],
+                'httponly' => (bool) $p['httponly'],
+                'samesite' => $p['samesite'] ?? 'Lax',
+            ]);
         }
         session_destroy();
     }

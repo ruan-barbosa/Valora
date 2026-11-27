@@ -10,3 +10,16 @@ body {
 .bg-margem-perigo { background-color: #dc3545 !important; color: white; } /* vermelho */
 .bg-margem-alerta { background-color: #ffc107 !important; color: black; } /* âmbar (critério em aberto) */
 .bg-margem-saudavel { background-color: #198754 !important; color: white; } /* verde */
+
+/* Layout responsivo do menu lateral. */
+#sidebar-wrapper { width: 250px; flex: 0 0 250px; }
+#sidebar-wrapper .list-group-item { border-color: rgba(255,255,255,.08); }
+#sidebar-wrapper .list-group-item:hover,
+#sidebar-wrapper .list-group-item:focus { background-color: #343a40 !important; }
+@media (max-width: 991.98px) {
+    #sidebar-wrapper { min-height: 100vh; }
+    #page-content-wrapper { width: 100%; }
+}
+@media (min-width: 992px) {
+    #sidebar-wrapper { position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+}

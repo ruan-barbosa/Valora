@@ -1,105 +1,80 @@
-<?php 
-include __DIR__ . '/../layout/header.php'; 
-
-// Mock de dados (Seção 12)
-$fornecedores = $fornecedores ?? [
-    ['id_fornecedor' => 1, 'nome' => 'Moinho Sul', 'contato' => 'vendas@moinhosul.com.br', 'ativo' => true],
-    ['id_fornecedor' => 2, 'nome' => 'Embalagens Flex', 'contato' => '(11) 99999-0000', 'ativo' => true],
-];
-$csrf = $csrf ?? 'token_de_teste';
+<?php include __DIR__ . '/../layout/header.php'; ?>
+<?php
+$fornecedores = $fornecedores ?? [];
+$csrf = $csrf ?? '';
+$incluirInativos = $incluirInativos ?? false;
 ?>
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Insumos e Preços</h1>
-            <p class="text-muted mb-0">Gestão de materiais, mão de obra, máquinas e histórico de custos.</p>
+            <p class="text-muted mb-0">Cadastre e mantenha os fornecedores utilizados nos preços dos insumos.</p>
         </div>
-        <button class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFornecedor">
-            <span class="fs-5 me-1">+</span> Novo Fornecedor
-        </button>
+        <button class="btn btn-primary fw-bold" type="button" data-bs-toggle="modal" data-bs-target="#modalFornecedor" data-modo="novo">+ Novo fornecedor</button>
     </div>
 
-    <!-- Navegação em Abas -->
     <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <a class="nav-link text-muted" href="<?= htmlspecialchars(url('insumos')) ?>">Insumos</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active fw-bold" href="<?= htmlspecialchars(url('insumos/fornecedores')) ?>">Fornecedores</a>
-        </li>
+        <li class="nav-item"><a class="nav-link" href="<?= e(url('insumos')) ?>">Insumos</a></li>
+        <li class="nav-item"><a class="nav-link active fw-bold" href="<?= e(url('insumos/fornecedores')) ?>">Fornecedores</a></li>
     </ul>
 
     <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="fw-semibold">Fornecedores cadastrados</span>
+            <form method="get" action="<?= e(url('insumos/fornecedores')) ?>" class="d-flex align-items-center gap-2">
+                <label for="filtro-fornecedor-inativos" class="small text-muted">Exibir inativos</label>
+                <input type="checkbox" class="form-check-input" id="filtro-fornecedor-inativos" name="inativos" value="1" <?= $incluirInativos ? 'checked' : '' ?> onchange="this.form.submit()">
+            </form>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-secondary text-uppercase" style="font-size: 0.75rem;">
-                    <tr>
-                        <th class="ps-4">Nome do Fornecedor</th>
-                        <th>Contato</th>
-                        <th class="text-end pe-4">Ações</th>
-                    </tr>
-                </thead>
+                <thead class="table-light"><tr><th class="ps-4">Fornecedor</th><th>Contato</th><th>Situação</th><th class="text-end pe-4">Ações</th></tr></thead>
                 <tbody>
-                    <?php if (empty($fornecedores)): ?>
-                        <tr>
-                            <td colspan="3" class="text-center p-5 text-muted">Nenhum fornecedor cadastrado.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($fornecedores as $f): ?>
-                        <tr>
-                            <td class="ps-4 fw-bold text-dark"><?= htmlspecialchars($f['nome']) ?></td>
-                            <td class="text-muted"><?= htmlspecialchars($f['contato']) ?></td>
-                            <td class="text-end pe-4">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <!-- Edição rápida via Modal (Mock visual) -->
-                                    <button class="btn btn-sm btn-outline-primary" title="Editar">✏️</button>
-                                    
-                                    <form method="post" action="<?= htmlspecialchars(url('fornecedores/inativar')) ?>" class="d-inline" onsubmit="return confirm('Inativar este fornecedor?');">
-                                        <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>">
-                                        <input type="hidden" name="id_fornecedor" value="<?= (int)$f['id_fornecedor'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Inativar">🗑️</button>
+                <?php if (!$fornecedores): ?>
+                    <tr><td colspan="4" class="text-center text-muted py-5">Nenhum fornecedor encontrado.</td></tr>
+                <?php else: foreach ($fornecedores as $f): ?>
+                    <tr>
+                        <td class="ps-4 fw-semibold"><?= e($f['nome']) ?></td>
+                        <td><?= e($f['contato']) ?></td>
+                        <td><?= $f['ativo'] ? '<span class="badge text-bg-success">Ativo</span>' : '<span class="badge text-bg-secondary">Inativo</span>' ?></td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFornecedor"
+                                        data-modo="editar" data-id="<?= (int) $f['id_fornecedor'] ?>" data-nome="<?= e($f['nome']) ?>" data-contato="<?= e($f['contato']) ?>">Editar</button>
+                                <?php if ($f['ativo']): ?>
+                                    <form method="post" action="<?= e(url('fornecedores/inativar')) ?>" onsubmit="return confirm('Inativar este fornecedor?');">
+                                        <input type="hidden" name="csrf" value="<?= e($csrf) ?>"><input type="hidden" name="id_fornecedor" value="<?= (int) $f['id_fornecedor'] ?>">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Inativar</button>
                                     </form>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                                <?php else: ?>
+                                    <form method="post" action="<?= e(url('fornecedores/reativar')) ?>">
+                                        <input type="hidden" name="csrf" value="<?= e($csrf) ?>"><input type="hidden" name="id_fornecedor" value="<?= (int) $f['id_fornecedor'] ?>">
+                                        <button class="btn btn-sm btn-outline-success" type="submit">Reativar</button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Modal Novo/Editar Fornecedor (POST /fornecedores/salvar - Seção 8.5) -->
-<div class="modal fade" id="modalFornecedor" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <form method="post" action="<?= htmlspecialchars(url('fornecedores/salvar')) ?>">
-                <div class="modal-header bg-light border-bottom-0">
-                    <h5 class="modal-title fw-bold">Dados do Fornecedor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>">
-                    <!-- Se for edição, id_fornecedor seria preenchido aqui -->
-                    
-                    <div class="mb-3">
-                        <label for="nomeFornecedor" class="form-label fw-semibold">Nome *</label>
-                        <input type="text" id="nomeFornecedor" name="nome" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contato" class="form-label fw-semibold">Contato (Telefone/Email)</label>
-                        <input type="text" id="contato" name="contato" class="form-control">
-                    </div>
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary fw-bold">Salvar Fornecedor</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="modal fade" id="modalFornecedor" tabindex="-1" aria-labelledby="tituloModalFornecedor" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <form method="post" action="<?= e(url('fornecedores/salvar')) ?>">
+            <div class="modal-header"><h2 class="modal-title fs-5 fw-bold" id="tituloModalFornecedor">Novo fornecedor</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+            <div class="modal-body">
+                <input type="hidden" name="csrf" value="<?= e($csrf) ?>"><input type="hidden" name="id_fornecedor" id="id_fornecedor" value="">
+                <div class="mb-3"><label class="form-label" for="nomeFornecedor">Nome *</label><input class="form-control" id="nomeFornecedor" name="nome" maxlength="100" required></div>
+                <div><label class="form-label" for="contatoFornecedor">Contato</label><input class="form-control" id="contatoFornecedor" name="contato" maxlength="100" placeholder="Telefone ou e-mail"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Salvar fornecedor</button></div>
+        </form>
+    </div></div>
 </div>
-
+<script src="<?= e(asset('js/fornecedores.js')) ?>"></script>
 <?php include __DIR__ . '/../layout/footer.php'; ?>

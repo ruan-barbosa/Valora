@@ -27,6 +27,13 @@ class Validador
         return preg_match('/^\d+(\.\d+)?$/', $valor) ? (float) $valor : null;
     }
 
+    /** Valor em dinheiro (aceita vírgula). Devolve null se for inválido ou grande demais para o banco (decimal 12,4). */
+    public static function dinheiro(string $valor): ?float
+    {
+        $numero = self::decimal($valor);
+        return ($numero !== null && $numero <= 99999999.9999) ? round($numero, 4) : null;
+    }
+
     /** Percentual entre 0 e 100. */
     public static function percentual(string $valor): ?float
     {

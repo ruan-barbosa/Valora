@@ -1,174 +1,160 @@
 # Valora
 
-Sistema web que calcula quanto custa produzir cada produto (ou executar cada serviço), compara com o preço de venda e avisa quando a margem de lucro fica abaixo do mínimo.
+Sistema web para controlar custos de produtos, serviços e itens de revenda, acompanhar margens e alertar quando uma margem fica abaixo do mínimo definido pela empresa.
 
-Projeto SA · Senai Joinville · em desenvolvimento.
+Projeto SA · SENAI Joinville.
 
-## Como o sistema funciona
+## Funcionalidades incluídas
 
-1. Criação do usuário administrador.
-2. O administrador cria uma empresa e define a margem de lucro mínima e o percentual de custos indiretos.
-3. O administrador cria os demais usuários, cada um com seu perfil (gestor, comprador e produção).
-4. O comprador cadastra os fornecedores.
-5. O comprador insere os itens/insumos (material, mão de obra e máquina), cada um com unidade de medida e preço. Todo preço informado fica guardado no histórico.
-6. O gestor insere um produto com seu preço de venda. O tipo do produto define como ele é cadastrado:
-   - **Produto ou serviço:** informa a composição, ou seja, os itens que ele usa, com a quantidade e a perda de cada um. A quantidade pode ser informada em outra unidade do mesmo grupo (por exemplo, gramas para um item cadastrado em kg), e o sistema converte automaticamente.
-   - **Revenda:** informa apenas o preço de compra e o fornecedor. O sistema monta a composição sozinho, com quantidade 1.
-7. O sistema calcula o custo do produto: material + mão de obra + máquina formam o custo direto, e sobre ele é aplicado o percentual de custos indiretos, resultando no custo total.
-8. Calcula a margem de lucro: (preço de venda − custo total) ÷ preço de venda, e compara com a margem mínima do produto (ou, se ele não tiver, a da empresa).
-9. Cria um alerta caso a margem esteja abaixo do esperado.
-10. Quando o comprador atualiza o preço de um insumo, o sistema grava o novo preço no histórico, recalcula todos os produtos que usam aquele insumo e cria alertas para os que ficarem abaixo da margem mínima.
-11. A produção registra a quantidade produzida de cada produto, e o sistema guarda o custo do momento, formando um histórico que não muda quando os preços são reajustados.
-12. O gestor pode simular um reajuste de preço de um insumo (por exemplo, +10%) e ver como ficam o custo e a margem dos produtos afetados, sem alterar nenhum dado.
-13. Um painel mostra a lista de alertas coloridos e dois gráficos simples (margem por produto e evolução do preço de um insumo), com filtro por período, além da consulta dos históricos de preços e de produção.
+- Cadastro inicial da empresa e do administrador, login e troca de senha.
+- Gestão de usuários por perfil: administrador, gestor, comprador e produção.
+- Cadastro, edição, inativação e reativação de insumos e fornecedores.
+- Histórico de cada alteração de preço, com data, fornecedor e responsável.
+- Cadastro e manutenção de produtos, serviços e revendas.
+- Fichas técnicas com itens, unidades compatíveis, quantidades e perdas.
+- Conversão automática de unidades do mesmo grupo (ex.: 500 g para 0,5 kg).
+- Cálculo de custo direto, rateio de custos indiretos, custo total e margem.
+- Revenda com composição criada automaticamente a partir de um item e quantidade 1.
+- Alertas de margem, recálculo ao mudar preços e encerramento do alerta quando a margem se recupera.
+- Simulador de reajuste que não grava os preços reais.
+- Registros de produção/execução com custo unitário congelado no momento do lançamento.
+- Dashboard com alertas, gráfico de margens por período e evolução histórica do preço de um insumo.
+- Consulta do histórico de produção, filtros por período e correção/exclusão de lançamentos pelo administrador.
+- Rótulos de produção adaptados para empresas do segmento de serviços.
 
-## Perfis de usuário
+## Perfis e permissões
 
-| Perfil | O que faz | Valor no sistema |
-|---|---|---|
-| Administrador | Configura a empresa e os usuários; acessa todas as telas | `administrador` |
-| Gestor | Cadastra produtos e fichas técnicas, acompanha alertas e usa o simulador | `gestor` |
-| Comprador | Cadastra fornecedores e insumos e atualiza preços | `comprador` |
-| Produção | Registra a produção e consulta fichas técnicas | `producao` |
+| Perfil | Permissões principais |
+|---|---|
+| Administrador | Acesso integral, configura empresa e usuários, consulta/edita/exclui lançamentos de produção |
+| Gestor | Produtos, fichas técnicas, alertas, dashboard e simulador |
+| Comprador | Insumos, fornecedores, atualização de preços e histórico |
+| Produção | Registra produção/execução e consulta o próprio histórico de lançamentos |
 
-As permissões por rota ficam em `app/routes.php` e podem ser ajustadas ali.
+O administrador recebe acesso integral pelo controle central de permissões. As demais permissões ficam declaradas em `app/routes.php` e são conferidas pelo roteador antes da ação.
 
 ## Tecnologias
 
-- **Back-end:** PHP 8.0 ou superior (testado com 8.3), PDO, padrão MVC próprio (sem framework)
-- **Banco de dados:** MariaDB (compatível com MySQL), charset `utf8mb4`
-- **Front-end:** HTML, Bootstrap 5, JavaScript e Chart.js
-- **Testes:** Cypress (pasta `testes/`)
-- **Hospedagem:** InfinityFree
+- PHP 8.0 ou superior, PDO e padrão MVC.
+- MariaDB/MySQL com `utf8mb4` e extensão PHP `pdo_mysql`.
+- Bootstrap 5, JavaScript e Chart.js.
+- Cypress para testes de navegação/autenticação.
 
-## Estrutura de pastas
+## Instalação local
 
-```
-Valora/
-├── .htaccess              manda todo acesso para a pasta public/
-├── app/
-│   ├── core/              núcleo: roteador, sessão, CSRF, login, conexão com o banco
-│   ├── controllers/       recebem as requisições e escolhem a tela
-│   ├── models/            acesso ao banco (um por tabela)
-│   ├── services/          regras de negócio (cálculo de custo, alertas, conversão de unidades)
-│   ├── views/             telas (layout, auth, dashboard, fichas, insumos, producao, simulador, configuracoes, erros)
-│   └── routes.php         todas as rotas e quem pode acessar cada uma
-├── config/
-│   ├── config.example.php modelo de configuração (vai para o Git)
-│   └── config.php         configuração real, com a senha do banco (NÃO vai para o Git)
-├── database/
-│   └── Script-Valora.sql  tabelas e unidades de medida iniciais
-├── docs/                  ficha de requisitos e diagramas
-├── public/                única pasta acessível pelo navegador
-│   ├── index.php          ponto de entrada de todas as requisições
-│   └── assets/            css, js e img
-└── testes/                testes automatizados (Cypress)
-```
-
-Divisão de trabalho: `app/views` e `public/assets` são do front-end. O restante de `app/`, `config/` e `database/` é do back-end.
-
-## Como rodar no seu computador
-
-**Requisitos:** PHP 8.0+ com a extensão `pdo_mysql` e um servidor MariaDB ou MySQL.
-
-1. **Banco de dados.** Crie o banco e importe o script (no DBeaver, phpMyAdmin ou terminal):
+1. Instale PHP 8+, MariaDB/MySQL e habilite a extensão `pdo_mysql`.
+2. Crie o banco:
 
    ```sql
-   create database valora character set utf8mb4 collate utf8mb4_unicode_ci;
-   use valora;
-   -- depois execute o conteúdo de database/Script-Valora.sql
+   CREATE DATABASE valora CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 
-   O script não tem `create database` nem `use`, porque na hospedagem o banco é criado pelo painel.
+3. Importe `database/Script-Valora.sql` no banco `valora`.
+4. Copie `config/config.example.php` para `config/config.php` e preencha host, banco, usuário e senha. Não compartilhe o arquivo real de configuração.
+5. Na raiz do projeto, execute:
 
-2. **Configuração.** Copie `config/config.example.php` para `config/config.php` e preencha:
+   ```bash
+   php -S localhost:8000 -t public
+   ```
 
-   | Campo | Para que serve |
-   |---|---|
-   | `host` | Servidor do banco (`localhost` no seu computador) |
-   | `banco` | Nome do banco (`valora`) |
-   | `usuario` e `senha` | Usuário do banco com acesso a esse banco |
-   | `debug` | `true` só no seu computador, para ver detalhes dos erros. Em produção, `false` |
+6. Abra `http://localhost:8000`, crie a empresa e o usuário administrador.
 
-3. **Servidor.** Escolha uma das opções:
+### Atualizar um banco já existente
 
-   - **Servidor embutido do PHP**, na pasta do projeto:
+Se o banco foi criado com uma versão anterior do script, faça primeiro um backup e execute **uma única vez** `database/Migracao-Valora-Final.sql`. Essa migração adiciona o estado de resolução aos alertas, o histórico de snapshots de margem e índices usados pelas consultas. Não execute a migração em banco recém-criado pelo script atualizado, pois as estruturas já estarão presentes.
 
-     ```
-     php -S localhost:8000 -t public
-     ```
+## Critério de cálculo da margem
 
-     Abra `http://localhost:8000`.
+A ficha de levantamento v2 deixa o campo da fórmula da margem (RN-03) sem definição. Para manter um critério único no sistema, a implementação atual calcula a margem sobre o preço de venda: `(preço de venda - custo total) / preço de venda × 100`. Essa é uma decisão técnica adotada para a implementação e deve ser confirmada pelo responsável pelo projeto antes do aceite final, caso a regra de negócio pretendida seja outra.
 
-   - **XAMPP:** coloque a pasta em `htdocs/Valora` e abra `http://localhost/Valora/`. O Apache precisa estar com `mod_rewrite` ativo e `AllowOverride All`.
+## Backup periódico
 
-4. **Teste a conexão:** abra `/status`. O esperado é `{"app":"ok","banco":"ok"}`.
+O script `scripts/backup_database.php` é executado somente pela linha de comando e usa `mysqldump`. Os arquivos `.sql.gz` ficam em `storage/backups`, fora da pasta pública, com permissão restrita. O padrão mantém 14 dias de backups; ajuste `backup_retencao_dias`, `backup_path` e `mysqldump` em `config/config.php` conforme o ambiente.
 
-## Rotas
+Execução manual:
 
-As rotas seguem o guia do front-end e estão em `app/routes.php`. Resumo:
+```bash
+php scripts/backup_database.php
+```
 
-| Área | Rotas |
-|---|---|
-| Acesso | `/login`, `/cadastro`, `/sair`, `/conta/senha` |
-| Painel | `/dashboard`, `/dashboard/graficos`, `/alertas/visto` |
-| Fichas técnicas | `/fichas`, `/fichas/novo`, `/fichas/editar/{id}`, `/fichas/salvar`, `/fichas/inativar`, `/fichas/calcular` |
-| Insumos e fornecedores | `/insumos`, `/insumos/salvar`, `/insumos/atualizar-preco`, `/insumos/inativar`, `/insumos/historico`, `/fornecedores`, `/fornecedores/salvar`, `/fornecedores/inativar` |
-| Produção | `/producao`, `/producao/registrar` |
-| Simulador | `/simulador`, `/simulador/simular` |
-| Configurações | `/configuracoes`, `/configuracoes/empresa`, `/usuarios/salvar`, `/usuarios/inativar` |
-
-Toda requisição `POST` exige o token CSRF: o campo `csrf` do formulário ou, nas chamadas `fetch`, o cabeçalho `X-CSRF-Token`. As telas recebem a variável `$csrf`, e o `header.php` também a expõe em uma tag `<meta name="csrf">`.
-
-## Publicação (InfinityFree)
-
-1. Crie o banco pelo painel e importe o `database/Script-Valora.sql` pelo phpMyAdmin (selecione o banco antes de importar).
-2. Envie os arquivos para a pasta `htdocs`, sem a pasta `.git`, sem `testes/` e sem `docs/`. O `.htaccess` da raiz precisa ficar na raiz de `htdocs`.
-3. Crie o `config/config.php` no servidor com os dados do banco **de lá** (servidor do banco, nome com prefixo, usuário e senha do painel) e `debug` como `false`.
-4. Abra `/status` para conferir a conexão.
-5. Antes de entregar, remova a rota `/status` de `app/routes.php`.
-
-## Segurança
-
-- O `config/config.php` está no `.gitignore`: a senha do banco nunca vai para o GitHub.
-- Só a pasta `public/` é acessível pelo navegador. O `.htaccess` da raiz esconde `app/`, `config/` e `database/`.
-- Senhas são guardadas com `password_hash`, as consultas ao banco usam `PDO` com consultas preparadas, e todo texto vindo do banco é escapado nas telas.
-- Em produção, os erros vão para o log do servidor e nunca para a tela.
+Agende esse comando diariamente no cron (Linux) ou no Agendador de Tarefas do Windows. Verifique periodicamente se o arquivo foi criado e faça um teste de restauração em um banco separado. A disponibilidade de `mysqldump` e de tarefas agendadas depende do provedor de hospedagem.
 
 ## Testes
 
-Os testes automatizados usam o Cypress e ficam em `testes/`:
+### Testes isolados de regras de negócio
 
+Execute sem precisar conectar ao MariaDB:
+
+```bash
+php testes/php/teste_regras_negocio.php
 ```
+
+O teste valida conversão de unidade, perda, custos indiretos e margem.
+
+### Cypress
+
+```bash
 cd testes
 npm install
-npm run open
+npm test
 ```
 
-Por enquanto a pasta tem só os exemplos da ferramenta. Os testes do Valora ainda serão escritos.
+O teste básico cobre a tela de login e o redirecionamento de visitante para área protegida. Para habilitar também o teste autenticado, configure as variáveis de ambiente `CYPRESS_VALORA_TEST_USER` e `CYPRESS_VALORA_TEST_PASSWORD` com uma conta de teste já cadastrada (preferencialmente uma conta descartável).
 
-## Documentação
+No PowerShell:
 
-Na pasta `docs/`:
+```powershell
+$env:CYPRESS_BASE_URL = "http://localhost:8000"
+$env:CYPRESS_VALORA_TEST_USER = "usuario_teste"
+$env:CYPRESS_VALORA_TEST_PASSWORD = "senha_de_teste"
+npm test
+```
 
-- Ficha de levantamento de requisitos (v2)
-- Diagrama de classes
+### Medição de desempenho
 
-## Andamento
+O script `testes/performance/check-p95.mjs` mede latência HTTP e informa o percentil 95. Exemplo:
 
-- [x] Requisitos e regras de negócio
-- [x] Modelagem do banco e script SQL (banco no ar na hospedagem)
-- [x] Estrutura MVC e núcleo do back-end (roteador, sessão, CSRF, login por perfil, helpers)
-- [x] Telas do front-end (com dados de exemplo)
-- [ ] Acesso: login, cadastro da empresa e do administrador, configurações
-- [ ] Insumos, fornecedores e histórico de preços
-- [ ] Fichas técnicas, cálculo de custo e margem, conversão de unidades
-- [ ] Alertas e recálculo ao mudar um preço
-- [ ] Registro de produção
-- [ ] Simulador de reajuste
-- [ ] Painel com alertas e gráficos
-- [ ] Testes, integração das telas com o back-end e entrega
+```bash
+VALORA_URL=http://localhost:8000/login VALORA_REQUISICOES=100 node testes/performance/check-p95.mjs
+```
 
-## Fora do escopo (versões futuras)
+O requisito RNF-01 considera P95 de até 2 segundos. A medição deve ser repetida no ambiente alvo, com autenticação e dados representativos. O pacote não afirma que esse limite foi comprovado em produção.
 
-Relatórios avançados e outros gráficos, registro de auditoria das alterações e resumo explicativo dos alertas por IA.
+### Verificações locais incluídas nesta entrega
+
+- Verificação de sintaxe PHP em todos os arquivos PHP do projeto.
+- Verificação de sintaxe JavaScript com Node.js.
+- Testes isolados de cálculo de custo, conversão de unidade e margem.
+- Inspeção estrutural do script SQL, rotas e pacotes.
+
+O teste integrado com MariaDB, a medição de carga em servidor real, o teste de restauração de backup e a validação em Chrome/Edge/Firefox e dispositivos físicos precisam ser executados no ambiente de instalação.
+
+## Publicação
+
+1. Configure o banco de produção e importe o script SQL atualizado (ou aplique a migração se o banco já existir).
+2. Envie os arquivos da aplicação, sem `.git/`, `testes/` e, se desejado, sem `docs/`.
+3. Crie `config/config.php` no servidor com as credenciais daquele ambiente e `debug` desativado.
+4. Configure HTTPS e permissões de escrita apenas para `storage/backups`.
+5. Programe e teste backups. Caso o provedor não permita executar `mysqldump` ou tarefas agendadas, faça os backups pelo painel do banco/provedor.
+6. Teste o login e os fluxos com uma conta de cada perfil antes da entrega.
+
+## Estrutura principal
+
+```text
+app/
+  controllers/   controladores MVC
+  core/          roteador, sessão, CSRF, autenticação e helpers
+  models/        acesso ao MariaDB por PDO
+  services/      cálculo, conversão e alertas
+  views/         telas da aplicação
+  routes.php     rotas e permissões
+config/          config.example.php (config.php é local e ignorado pelo Git)
+database/        script completo e migração
+public/          entrada web, CSS e JavaScript
+scripts/         backup CLI
+testes/          Cypress, testes PHP e medição P95
+```
+
+## Fora do escopo da versão inicial
+
+Emissão de notas fiscais, integração com ERP/contabilidade, inventário completo de estoque, aplicativo mobile nativo, previsão de preços por IA, relatórios avançados, trilha de auditoria futura e explicações de alertas por IA.

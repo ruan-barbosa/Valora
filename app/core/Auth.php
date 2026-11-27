@@ -7,6 +7,7 @@ class Auth
     public static function entrar(array $usuario): void
     {
         Session::regenerar();
+        Csrf::renovar();
         Session::set('usuario', [
             'id_usuario'   => (int) $usuario['id_usuario'],
             'id_empresa'   => (int) $usuario['id_empresa'],
