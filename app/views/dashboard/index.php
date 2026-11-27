@@ -148,7 +148,9 @@ $servicos = ($segmentoEmpresa ?? '') === 'servicos';
                     </div>
                 </div>
                 <div class="card-body p-3">
-                    <canvas id="graficoMargem" height="250"></canvas>
+                    <div class="grafico-container">
+                        <canvas id="graficoMargem"></canvas>
+                    </div>
                     <p id="statusGraficoMargem" class="small text-muted text-center mt-2 mb-0" role="status" aria-live="polite"></p>
                 </div>
             </div>
@@ -175,7 +177,9 @@ $servicos = ($segmentoEmpresa ?? '') === 'servicos';
                     </div>
                 </div>
                 <div class="card-body p-3">
-                    <canvas id="graficoEvolucao" height="250"></canvas>
+                    <div class="grafico-container">
+                        <canvas id="graficoEvolucao"></canvas>
+                    </div>
                     <p id="statusGraficoEvolucao" class="small text-muted text-center mt-2 mb-0" role="status" aria-live="polite"></p>
                 </div>
             </div>
