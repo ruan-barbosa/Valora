@@ -77,7 +77,7 @@ Execução manual:
 php scripts/backup_database.php
 ```
 
-Agende esse comando diariamente no cron (Linux) ou no Agendador de Tarefas do Windows. Verifique periodicamente se o arquivo foi criado e faça um teste de restauração em um banco separado. A disponibilidade de `mysqldump` e de tarefas agendadas depende do provedor de hospedagem.
+Agende esse comando diariamente no cron (Linux) ou no Agendador de Tarefas do Windows. Verifique periodicamente se o arquivo foi criado e faça um teste de restauração em um banco separado. A disponibilidade de `mysqldump` e de tarefas agendadas depende do provedor de hospedagem. No plano gratuito do InfinityFree não há `mysqldump` nem cron: exporte o banco pelo phpMyAdmin (Exportar → SQL) em uma rotina combinada e guarde o arquivo fora do servidor.
 
 ## Testes
 

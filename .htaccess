@@ -2,4 +2,11 @@
 # Assim o endereço funciona sem o /public/ e app/, config/ e database/ ficam inacessíveis pelo navegador.
 Options -Indexes
 RewriteEngine On
+
+# HTTPS: descomente as 3 linhas abaixo depois de confirmar que o site abre em https://.
+# Se o servidor não informar o HTTPS, a regra entra em loop de redirecionamento e tira o site do ar.
+# RewriteCond %{HTTPS} !=on
+# RewriteCond %{HTTP:X-Forwarded-Proto} !https
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 RewriteRule ^(?!public/)(.*)$ public/$1 [L]

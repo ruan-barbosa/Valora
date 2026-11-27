@@ -1,6 +1,6 @@
 <?php
 
-// Quem está logado e quais são as permissões. O login em si (consulta ao banco) vem na fase B.
+// Quem está logado e quais são as permissões.
 class Auth
 {
     /** Guarda o usuário na sessão. Receba um array com id_usuario, id_empresa, nome, perfil e empresa_nome. */

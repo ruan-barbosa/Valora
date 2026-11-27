@@ -29,7 +29,7 @@ $router->get('/dashboard/alertas', 'DashboardController@alertas', $gestor);
 $router->get('/dashboard/graficos', 'DashboardController@graficos', $gestor);
 $router->post('/alertas/visto', 'AlertaController@marcarVisto', $gestor);
 
-// Fichas técnicas (a produção só consulta)
+// Fichas técnicas (gestor e administrador)
 $router->get('/fichas', 'FichaController@index', $gestor);
 $router->get('/fichas/novo', 'FichaController@novo', $gestor);
 $router->get('/fichas/editar/{id}', 'FichaController@editar', $gestor);

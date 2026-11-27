@@ -6,19 +6,30 @@ class HistoricoMargem
 {
     public static function registrar(int $idProduto, float $custo, float $margem, float $margemMinima): void
     {
-        $sql = 'insert into historico_margem (id_produto, custo_total, margem_calculada, margem_minima)
-                values (?, ?, ?, ?)';
+        $pdo = Database::conectar();
+        $custo = round($custo, 4);
         // A coluna decimal(7,2) aceita margens entre -99.999,99 e 99.999,99.
         $margem = max(-99999.99, min(99999.99, round($margem, 2)));
-        Database::conectar()->prepare($sql)->execute([
-            $idProduto,
-            round($custo, 4),
-            $margem,
-            round($margemMinima, 2),
-        ]);
+        $margemMinima = round($margemMinima, 2);
+
+        // Não grava de novo se nada mudou desde a última fotografia deste produto.
+        $ultima = $pdo->prepare('select custo_total, margem_calculada, margem_minima from historico_margem
+                                 where id_produto = ? order by id_historico_margem desc limit 1');
+        $ultima->execute([$idProduto]);
+        $anterior = $ultima->fetch();
+        if ($anterior
+            && abs((float) $anterior['custo_total'] - $custo) < 0.00005
+            && abs((float) $anterior['margem_calculada'] - $margem) < 0.005
+            && abs((float) $anterior['margem_minima'] - $margemMinima) < 0.005) {
+            return;
+        }
+
+        $sql = 'insert into historico_margem (id_produto, custo_total, margem_calculada, margem_minima)
+                values (?, ?, ?, ?)';
+        $pdo->prepare($sql)->execute([$idProduto, $custo, $margem, $margemMinima]);
     }
 
-    /** Última fotografia de cada produto dentro do período informado. */
+    /** Margem vigente de cada produto no fim do período (última fotografia até a data final). O início fica por compatibilidade: como só se grava quando algo muda, um produto sem mudanças no período continua com a margem anterior. */
     public static function ultimasPorProduto(int $idEmpresa, string $inicio, string $fim): array
     {
         $sql = "select p.id_produto, p.nome, h.margem_calculada as margem, h.margem_minima,
@@ -26,19 +37,18 @@ class HistoricoMargem
                 from historico_margem h
                 join produto p on p.id_produto = h.id_produto
                 where p.id_empresa = ?
-                  and h.data_registro >= ? and h.data_registro <= ?
+                  and p.ativo = 1
                   and h.id_historico_margem = (
                     select max(h2.id_historico_margem)
                     from historico_margem h2
                     where h2.id_produto = h.id_produto
-                      and h2.data_registro >= ? and h2.data_registro <= ?
+                      and h2.data_registro <= ?
                   )
                 order by p.nome";
         $consulta = Database::conectar()->prepare($sql);
         $consulta->execute([
             $idEmpresa,
-            $inicio . ' 00:00:00', $fim . ' 23:59:59',
-            $inicio . ' 00:00:00', $fim . ' 23:59:59',
+            $fim . ' 23:59:59',
         ]);
 
         $linhas = $consulta->fetchAll();

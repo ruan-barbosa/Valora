@@ -200,8 +200,21 @@ class ItemController extends Controller
         $idEmpresa = Auth::empresaId();
         $id = (int) Validador::texto('id_item');
 
-        if (!Item::buscar($id, $idEmpresa)) {
+        $item = Item::buscar($id, $idEmpresa);
+        if (!$item) {
             $this->redirecionar('insumos', 'Insumo não encontrado.', 'erro');
+        }
+
+        // Insumo usado em ficha ativa não pode ser inativado: o custo do produto ficaria preso a um insumo fora de uso.
+        $idsProdutos = Produto::idsQueUsamItem($id, $idEmpresa);
+        if ($idsProdutos) {
+            $nomes = array_column(Produto::listar($idEmpresa, false, $idsProdutos), 'nome');
+            $lista = implode(', ', array_slice($nomes, 0, 3)) . (count($nomes) > 3 ? ' e mais ' . (count($nomes) - 3) : '');
+            $this->redirecionar(
+                'insumos',
+                'Não é possível inativar ' . $item['nome'] . ': ele está nas fichas de ' . $lista . '. Retire-o dessas fichas ou inative os produtos antes.',
+                'erro'
+            );
         }
 
         Item::definirAtivo($id, $idEmpresa, false);

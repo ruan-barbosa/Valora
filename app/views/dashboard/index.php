@@ -104,7 +104,7 @@ $servicos = ($segmentoEmpresa ?? '') === 'servicos';
                             <?php foreach ($alertas as$alerta): ?>
                                 <?php 
                                     // A cor indica se a margem caiu abaixo do mínimo (Seção 8.3)
-                                    $corTexto =$alerta['margem_calculada'] < ($alerta['margem_minima'] ?? 30) ? 'text-danger' : 'text-warning'; 
+                                    $corTexto = $alerta['margem_calculada'] < $alerta['margem_minima'] ? 'text-danger' : 'text-warning'; 
                                 ?>
                                 <li class="list-group-item p-3 <?= $alerta['visto'] ? 'bg-light' : '' ?>">
                                     <div class="d-flex justify-content-between align-items-start mb-1">

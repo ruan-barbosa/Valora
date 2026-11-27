@@ -65,6 +65,16 @@ class Alerta
         Database::conectar()->prepare($sql)->execute([$idProduto]);
     }
 
+    /** Produtos ativos com alerta em aberto (margem abaixo do mínimo na última avaliação). Consulta leve: não recalcula custos. */
+    public static function contarProdutosAbaixoDaMargem(int $idEmpresa): int
+    {
+        $sql = 'select count(distinct a.id_produto) from alerta a join produto p on p.id_produto = a.id_produto
+                where p.id_empresa = ? and p.ativo = 1 and a.resolvido = 0';
+        $consulta = Database::conectar()->prepare($sql);
+        $consulta->execute([$idEmpresa]);
+        return (int) $consulta->fetchColumn();
+    }
+
     public static function marcarVisto(int $idAlerta, int $idEmpresa): bool
     {
         $sql = 'update alerta a join produto p on p.id_produto = a.id_produto

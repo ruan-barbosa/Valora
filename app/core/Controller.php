@@ -53,7 +53,7 @@ class Controller
         ];
     }
 
-    /** Fica 0 até existir o model Alerta (fase E). */
+    /** Alertas não vistos; só o gestor e o administrador veem o contador. */
     private function contarAlertas(): int
     {
         if (!Auth::logado() || !Auth::permite(['gestor']) || !class_exists('Alerta') || !method_exists('Alerta', 'contarNaoVistos')) {

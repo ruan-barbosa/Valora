@@ -93,9 +93,15 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => console.error(error));
     }
 
+    // Atualiza a cada 30 s e só com a aba visível, para não sobrecarregar o servidor.
     if (listaAlertas) {
         carregarAlertas();
-        window.setInterval(carregarAlertas, 3000);
+        window.setInterval(function () {
+            if (document.visibilityState === 'visible') carregarAlertas();
+        }, 30000);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') carregarAlertas();
+        });
     }
 
     function definirStatus(elementoStatus, canvas, mensagem, erro) {

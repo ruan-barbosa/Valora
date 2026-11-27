@@ -13,9 +13,8 @@ class DashboardController extends Controller
 
         // Resumo, alertas e gráficos são do gestor (e do administrador).
         if (Auth::permite(['gestor'])) {
-            $produtos = CustoService::produtosDaEmpresa($idEmpresa);
             $resumo = [
-                'produtos_abaixo_margem' => count(array_filter($produtos, fn($p) => $p['tem_ficha'] && $p['abaixo_margem'])),
+                'produtos_abaixo_margem' => Alerta::contarProdutosAbaixoDaMargem($idEmpresa),
                 'alertas_nao_vistos'     => Alerta::contarNaoVistos($idEmpresa),
                 'producao_mes'           => LancamentoProducao::totalDoMes($idEmpresa),
             ];
@@ -41,11 +40,8 @@ class DashboardController extends Controller
         }
 
         $idEmpresa = Auth::empresaId();
-        $produtos = CustoService::produtosDaEmpresa($idEmpresa);
-        $abaixo = count(array_filter($produtos, static fn(array $produto): bool => $produto['tem_ficha'] && $produto['abaixo_margem']));
-
         $this->json([
-            'produtos_abaixo_margem' => $abaixo,
+            'produtos_abaixo_margem' => Alerta::contarProdutosAbaixoDaMargem($idEmpresa),
             'alertas_nao_vistos' => Alerta::contarNaoVistos($idEmpresa),
             'alertas' => Alerta::listarRecentes($idEmpresa, 8),
         ]);
